@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手札確認アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>AFトークンカウント</h1>
+    <div class="container">
+        <div class="main-content-wrapper"> 
+            <div class="left-panel">
+                <div class="played-cards">
+                    <h2>相手のプレイしたカード (トークン生成)</h2>
+                    <button class="card-icon" id="card1" data-card-name="イリス" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="0">
+                        <img src="ビビッドインベンター・イリス.png" alt="イリス">
+                        <p class="card-count">0</p> 
+                    </button>
+                    <button class="card-icon" id="card2" data-card-name="AFチャージ" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="1">
+                        <img src="アーティファクトチャージ.png" alt="AFチャージ">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card3" data-card-name="エレクトロウィッパー" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="0">
+                        <img src="エレクトロウィッパー.png" alt="エレクトロウィッパー">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card4" data-card-name="アンストッパブルガンナー" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="0" data-future-core-gain="1">
+                        <img src="アンストッパブルガンナー.png" alt="アンストッパブルガンナー">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card5" data-card-name="命の奔流" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="0">
+                        <img src="命の奔流.png" alt="命の奔流">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card6" data-card-name="砲撃の猫獣人" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="0" data-future-core-gain="1">
+                        <img src="砲撃の猫獣人.png" alt="砲撃の猫獣人">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card7" data-card-name="レゾリューション・ミリアム_進化前" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="1">
+                        <img src="レゾリューション・ミリアム_進化前.png" alt="レゾリューション・ミリアム_進化前">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card8" data-card-name="レゾリューション・ミリアム_進化後" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="1">
+                        <img src="レゾリューション・ミリアム_進化後.png" alt="レゾリューション・ミリアム_進化後">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card9" data-card-name="ストラグルリーダー・ルキナ" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="1">
+                        <img src="ストラグルリーダー・ルキナ.png" alt="ストラグルリーダー・ルキナ">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card10" data-card-name="異次元からの銃撃" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="1">
+                        <img src="異次元からの銃撃.png" alt="異次元からの銃撃">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card11" data-card-name="改境の天宮・アルエット" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="1" data-future-core-gain="1">
+                        <img src="改境の天宮・アルエット.png" alt="改境の天宮・アルエット">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card12" data-card-name="遺産の砲撃" 
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0"
+                            data-past-core-gain="0" data-future-core-gain="1">
+                        <img src="遺産の砲撃.png" alt="遺産の遺産の砲撃">
+                        <p class="card-count">0</p>
+                    </button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="fused-cards">
+                    <h2>相手の融合したカード (トークン消費)</h2>
+                    <button class="card-icon" id="card13" data-card-name="アタックアーティファクト"
+                            data-past-core-cost="0" data-future-core-cost="1" 
+                            data-any-core-cost="1" 
+                            data-past-core-gain="0" data-future-core-gain="0">
+                        <img src="アタックアーティファクト.png" alt="アタックアーティファクト">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card14" data-card-name="キャッスルアーティファクト"
+                            data-past-core-cost="1" data-future-core-cost="0" 
+                            data-any-core-cost="1" 
+                            data-past-core-gain="0" data-future-core-gain="0">
+                        <img src="キャッスルアーティファクト.png" alt="キャッスルアーティファクト">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card15" data-card-name="デストロイアーティファクトα"
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="1" 
+                            data-past-core-gain="0" data-future-core-gain="0"
+                            data-prev-card-cost="1" data-prev-card-ids="card13,card14"> 
+                        <img src="デストロイアーティファクトα.png" alt="デストロイアーティファクトα">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card16" data-card-name="デストロイアーティファクトβ"
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="2" 
+                            data-past-core-gain="0" data-future-core-gain="0"
+                            data-prev-card-cost="1" data-prev-card-ids="card13,card14">
+                        <img src="デストロイアーティファクトβ.png" alt="デストロイアーティファクトβ">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card17" data-card-name="デストロイアーティファクトγ"
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0" 
+                            data-past-core-gain="0" data-future-core-gain="0"
+                            data-prev-card-cost="2" data-prev-card-ids="card13,card14">
+                        <img src="デストロイアーティファクトγ.png" alt="デストロイアーティファクトγ">
+                        <p class="card-count">0</p>
+                    </button>
+                    <button class="card-icon" id="card18" data-card-name="イクシードアーティファクトΩ"
+                            data-past-core-cost="0" data-future-core-cost="0" 
+                            data-any-core-cost="0" 
+                            data-past-core-gain="0" data-future-core-gain="0"
+                            data-prev-card-cost="1" data-prev-card-ids="card15"
+                            data-prev-card-cost2="1" data-prev-card-ids2="card16"
+                            data-prev-card-cost3="1" data-prev-card-ids3="card17">
+                        <img src="イクシードアーティファクトΩ.png" alt="イクシードアーティファクトΩ">
+                        <p class="card-count">0</p>
+                    </button>
+                </div>
+
+                <div class="total-token-display">
+                    <h2>相手の手札にあるトークン</h2>
+                    <div class="token-images">
+                        <div class="token-type-display">
+                            <h3>パスト・コア</h3>
+                            <div id="past-core-display" class="token-image-container">
+                                </div>
+                        </div>
+                        <div class="token-type-display">
+                            <h3>フューチャー・コア</h3>
+                            <div id="future-core-display" class="token-image-container">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="reset-button">すべてリセット</button> </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

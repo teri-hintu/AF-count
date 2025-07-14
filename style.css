@@ -1,0 +1,210 @@
+/* その他の基本的なスタイル */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    background-color: #e0e9f0;
+    padding: 20px;
+    color: #333;
+}
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #34495e;
+    margin-bottom: 15px;
+    text-align: center;
+    width: 100%; /* 親要素の幅いっぱいに広げる */
+}
+
+.container {
+    max-width: 1200px; /* ★全体コンテナの最大幅を広げる */
+    margin: 20px auto;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex; /* ★Flexboxコンテナにする */
+    flex-direction: column; /* ★子要素を縦に並べる */
+    align-items: center; /* ★子要素を中央揃えにする */
+}
+
+/* ★新しいメインコンテンツラッパーのスタイル */
+.main-content-wrapper {
+    display: flex; /* これで左右のパネルを横並びに */
+    justify-content: space-around; /* 左右のパネルを均等に配置 */
+    align-items: flex-start; /* 上端を揃える */
+    width: 100%; /* 親コンテナの幅いっぱいに広げる */
+    gap: 20px; /* 左右のパネル間の隙間 */
+}
+
+/* ★左右のパネルのスタイル */
+.left-panel, .right-panel {
+    display: flex;
+    flex-direction: column; /* 子要素（セクション）を縦に並べる */
+    align-items: center; /* 各パネル内の要素を中央に配置 */
+    padding: 15px; /* 各パネルの内側の余白 */
+    background-color: #f8f9fa; /* 背景色 */
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    flex: 1; /* ★利用可能なスペースを均等に分け合う */
+    min-width: 450px; /* ★各パネルの最小幅（カードが綺麗に収まるように） */
+    box-sizing: border-box; /* パディングを幅に含める */
+}
+
+/* 相手のプレイしたカード（トークン生成）セクションのスタイル */
+.played-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* カードを中央に配置 */
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 20px; /* 下部余白を調整 */
+    padding: 10px; /* セクション内のパディングを調整 */
+    background-color: #f0f0f5; /* 少し異なる背景色で区別 */
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.03);
+    width: 100%; /* 親パネルの幅いっぱいに広げる */
+    max-width: none; /* 個別のmax-widthは削除 */
+}
+
+/* 相手の融合したカード（トークン消費）セクションのスタイル */
+.fused-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* カードを中央に配置 */
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 20px; /* 下部余白を調整 */
+    padding: 10px; /* セクション内のパディングを調整 */
+    background-color: #f0f0f5; /* played-cards と同じ背景色 */
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.03);
+    width: 100%; /* 親パネルの幅いっぱいに広げる */
+    max-width: none; /* 個別のmax-widthは削除 */
+}
+
+.fused-cards h2 {
+    color: #8b0000;
+}
+
+/* トークン総量表示エリアのスタイル */
+.total-token-display {
+    background-color: #f0f0f5; /* 背景色を他のセクションと揃える */
+    padding: 10px; /* パディングを調整 */
+    border-radius: 8px;
+    margin-top: 10px; /* 上部余白を調整 */
+    border: 1px solid #e2e6ea;
+    width: 100%; /* 親パネルの幅いっぱいに広げる */
+    box-sizing: border-box; /* パディングを幅に含める */
+}
+
+.total-token-display h2 {
+    margin-bottom: 15px; /* 下部余白を調整 */
+    color: #007bff;
+}
+
+.token-images {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* ★トークン画像間のギャップを調整 */
+    align-items: flex-start;
+    padding: 5px; /* トークン画像コンテナのパディング */
+}
+
+.token-type-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 10px; /* 各トークンタイプの左右マージン */
+}
+
+.token-type-display h3 {
+    margin-bottom: 5px; /* 下部余白を調整 */
+    color: #495057;
+    font-size: 1.0em; /* フォントサイズを調整 */
+}
+
+.token-image-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    min-height: 60px; /* トークン画像サイズに合わせて調整 */
+}
+
+.token-image-container img {
+    width: 60px; /* 画像の幅を調整 */
+    height: 60px; /* 画像の高さを調整 */
+    object-fit: contain;
+}
+
+/* カードアイコン関連のスタイル (変更なし) */
+.card-icon {
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 8px;
+    transition: background-color 0.2s ease;
+    border-radius: 5px;
+    text-decoration: none;
+    width: 80px; /* カードアイコンの固定幅 */
+    flex-shrink: 0;
+}
+
+.card-icon:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.card-icon img {
+    width: 110%;
+    max-width: 150px; /* ボタン画像を大きくする調整 */
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-icon .card-count {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #007bff;
+    margin-top: 0;
+    margin-bottom: 5px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    padding: 2px 8px;
+    min-width: 20px;
+    text-align: center;
+    display: inline-block;
+}
+
+/* リセットボタンのスタイル (変更なし) */
+.controls button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background-color: #dc3545;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    margin-top: 30px;
+}
+
+.controls button:hover {
+    background-color: #c82333;
+    transform: translateY(-2px);
+}
+
+.controls button:active {
+    transform: translateY(0);
+}
