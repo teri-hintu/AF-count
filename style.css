@@ -208,3 +208,83 @@ h2 {
 .controls button:active {
     transform: translateY(0);
 }
+
+/* --- スマートフォン向けレイアウトの最適化 (メディアクエリ) --- */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px; /* 全体コンテナのパディングを調整 */
+    }
+
+    h1 {
+        font-size: 1.8em; /* 見出しのフォントサイズを調整 */
+        margin-bottom: 20px;
+    }
+
+    /* メインコンテンツラッパーを縦並びにする */
+    .main-content-wrapper {
+        flex-direction: column; /* ★横並びから縦並びに変更 */
+        gap: 30px; /* パネル間の隙間を調整 */
+    }
+
+    /* 左右のパネルを幅いっぱいに広げる */
+    .left-panel, .right-panel {
+        width: 100%; /* ★親要素の幅いっぱいに広げる */
+        min-width: unset; /* 最小幅の制約を解除 */
+        padding: 10px; /* パネルのパディングを調整 */
+    }
+
+    .played-cards, .fused-cards {
+        padding: 10px 5px; /* カードセクションのパディングを調整 */
+        gap: 10px; /* カード間の隙間を少し狭くする */
+    }
+
+    .card-icon {
+        width: 70px; /* カードアイコンの幅を少し小さくする */
+        margin: 5px; /* マージンを調整 */
+    }
+
+    .card-icon img {
+        max-width: 60px; /* 画像の最大幅を調整 */
+    }
+
+    .card-icon .card-count {
+        font-size: 1em; /* カウントのフォントサイズを調整 */
+        padding: 1px 5px;
+    }
+
+    /* トークン表示エリアの調整 */
+    .total-token-display {
+        margin-top: 20px; /* 上部余白を調整 */
+        padding: 10px;
+    }
+
+    .token-type-display {
+        margin: 0 5px; /* 各トークンタイプの左右マージンを調整 */
+    }
+
+    .token-type-display h3 {
+        font-size: 1.0em; /* トークン見出しのフォントサイズを調整 */
+    }
+
+    .token-image-container img {
+        width: 50px; /* トークン画像のサイズを調整 */
+        height: 50px;
+    }
+
+    /* リセットボタンの調整 */
+    .controls button {
+        padding: 10px 20px;
+        font-size: 1em;
+        margin-top: 20px;
+    }
+}
+
+/* さらに小さいスマートフォン（例: 幅375px以下）向けに微調整が必要な場合 */
+@media (max-width: 480px) {
+    .card-icon {
+        width: 65px; /* さらにカードアイコンを小さくする */
+    }
+    .card-icon img {
+        max-width: 55px; /* さらに画像を小さくする */
+    }
+}
