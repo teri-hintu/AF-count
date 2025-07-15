@@ -1,10 +1,17 @@
 // script.js
 document.addEventListener('DOMContentLoaded', () => {
     // HTML要素の取得
-    const cardButtons = document.querySelectorAll('.card-icon');
+    const cardButtons = document.querySelectorAll('.card-icon'); // プレイされたカード
     const resetButton = document.getElementById('reset-button');
     const pastCoreDisplay = document.getElementById('past-core-display');
     const futureCoreDisplay = document.getElementById('future-core-display');
+    const fusionModal = document.getElementById('fusion-modal'); // モーダル
+    const fusionModalTitle = document.getElementById('fusion-modal-title'); // モーダルタイトル
+    const fusionInstructions = document.getElementById('fusion-instructions'); // 説明文
+    const fusionCardOptionsContainer = document.getElementById('fusion-card-options'); // カード選択肢コンテナ
+    const fusionTokenOptionsContainer = document.getElementById('fusion-token-options'); // トークン選択肢コンテナ
+    const confirmFusionSelectionButton = document.getElementById('confirm-fusion-selection'); // 融合確定ボタン
+    const closeFusionModalButton = document.getElementById('close-fusion-modal'); // モーダルを閉じるボタン
 
     // 各カードの現在のプレイ枚数を保存するオブジェクト
     let cardCounts = {};
@@ -13,12 +20,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let pastCoreTotal = 0;
     let futureCoreTotal = 0;
 
-    // トークン画像のパスを定義
-    const tokenImageBasePaths = {
+    // トークン画像のパスを定義 (ファイル名のみを格納)
+    const tokenImageBaseNames = {
         past_core: "パスト・コア.png",
         future_core: "フューチャー・コア.png"
     };
+    const IMAGE_BASE_PATH = ""; // 画像ファイルがルート直下にあるため空文字。もしimageフォルダがあれば "image/" に設定
 
+    // 全カードのメタデータを保持するオブジェクト
+    const allCardData = {};
+
+    // --- 融合元選択の現在の状態を追跡する変数 ---
+    let currentTargetCardData = null; 
+    let selectedSourceCards = {}; 
+    let selectedSourceTokens = {past_core: 0, future_core: 0};
+    
     // アプリ初期化処理
     function initializeApp() {
         cardButtons.forEach(button => {
@@ -29,79 +45,382 @@ document.addEventListener('DOMContentLoaded', () => {
                 countDisplay.textContent = 0;
             }
 
-            button.addEventListener('click', () => {
-                handleCardClick(button);
-            });
+            // data属性からカードデータを収集
+            allCardData[cardId] = {
+                id: cardId,
+                name: button.dataset.cardName,
+                imgSrc: button.querySelector('img').getAttribute('src'),
+                pastCoreCost: parseInt(button.dataset.pastCoreCost || '0', 10),
+                futureCoreCost: parseInt(button.dataset.futureCoreCost || '0', 10),
+                anyCoreCost: parseInt(button.dataset.anyCoreCost || '0', 10),
+                pastCoreGain: parseInt(button.dataset.pastCoreGain || '0', 10),
+                futureCoreGain: parseInt(button.dataset.futureCoreGain || '0', 10),
+                prevCardCost: parseInt(button.dataset.prevCardCost || '0', 10),
+                prevCardIds: button.dataset.prevCardIds ? button.dataset.prevCardIds.split(',') : [],
+                prevCardCost2: parseInt(button.dataset.prevCardCost2 || '0', 10),
+                prevCardIds2: button.dataset.prevCardIds2 ? button.dataset.prevCardIds2.split(',') : [],
+                prevCardCost3: parseInt(button.dataset.prevCardCost3 || '0', 10),
+                prevCardIds3: button.dataset.prevCardIds3 ? button.dataset.prevCardIds3.split(',') : []
+            };
+
+            // イベントリスナーをカードの種類に応じて分ける
+            if (button.closest('.fused-cards')) {
+                button.addEventListener('click', () => {
+                    showFusionSourceSelection(allCardData[cardId]);
+                });
+            } else {
+                button.addEventListener('click', () => {
+                    handleCardClick(button);
+                });
+            }
         });
 
         resetButton.addEventListener('click', resetAllCounts);
+        closeFusionModalButton.addEventListener('click', hideFusionModal);
+        confirmFusionSelectionButton.addEventListener('click', executeFusionAction);
 
         updateTotalTokenDisplay();
     }
 
-    // カードがクリックされたときの処理
+    // --- ポップアップ関連ロジック ---
+    function showFusionSourceSelection(targetCardData) {
+        currentTargetCardData = targetCardData;
+        selectedSourceCards = {};
+        selectedSourceTokens = {past_core: 0, future_core: 0};
+        confirmFusionSelectionButton.disabled = true;
+
+        fusionCardOptionsContainer.innerHTML = '';
+        fusionTokenOptionsContainer.innerHTML = '';
+        fusionInstructions.innerHTML = '';
+
+        fusionModalTitle.textContent = `「${targetCardData.name}」を融合するために消費するカード/トークンを選択`;
+
+        let instructionsText = `<p>融合に必要:</p><ul>`;
+        let totalRequiredAny = targetCardData.anyCoreCost;
+        
+        if (targetCardData.pastCoreCost > 0) instructionsText += `<li>パスト・コア: ${targetCardData.pastCoreCost}枚 (必須)</li>`;
+        if (targetCardData.futureCoreCost > 0) instructionsText += `<li>フューチャー・コア: ${targetCardData.futureCoreCost}枚 (必須)</li>`;
+        
+        if (totalRequiredAny > 0) instructionsText += `<li>任意のトークン (パスト・コア / フューチャー・コア): ${totalRequiredAny}枚 (選択)</li>`;
+
+        let sourceCandidatesIds = [];
+        if (targetCardData.id === "card18") { // イクシードΩ
+            instructionsText += `<li>デストロイアーティファクトα, β, γ 各1枚 (必須)</li>`;
+            sourceCandidatesIds = ["card15", "card16", "card17"];
+        } else if (targetCardData.id === "card17") { // ★デストロイアーティファクトγ の場合
+            instructionsText += `<li>アタックアーティファクト / キャッスルアーティファクト: 2枚 (選択)</li>`;
+            sourceCandidatesIds = ["card13", "card14"];
+        } else if (["card15", "card16"].includes(targetCardData.id)) { // デストロイα, β の場合
+            instructionsText += `<li>アタックアーティファクト / キャッスルアーティファクト: ${targetCardData.prevCardCost}枚 (選択)</li>`;
+            sourceCandidatesIds = ["card13", "card14"];
+        }
+        instructionsText += `</ul>`;
+        fusionInstructions.innerHTML = instructionsText;
+
+        // --- トークン選択肢の表示 ---
+        createTokenOptionButton('past_core', fusionTokenOptionsContainer);
+        createTokenOptionButton('future_core', fusionTokenOptionsContainer);
+
+        // --- 前段階カード選択肢の表示 ---
+        sourceCandidatesIds.forEach(sourceCardId => {
+            createCardOptionButton(sourceCardId, fusionCardOptionsContainer);
+        });
+
+        fusionModal.style.display = 'flex';
+        updateModalSelectionStatus();
+    }
+
+    function hideFusionModal() {
+        fusionModal.style.display = 'none';
+        currentTargetCardData = null; 
+        fusionModalTitle.textContent = `融合元のカードを選択`;
+    }
+
+    // トークン選択肢ボタンを作成するヘルパー関数
+    function createTokenOptionButton(tokenType, container) {
+        const tokenDisplay = (tokenType === 'past_core') ? 'パスト・コア' : 'フューチャー・コア';
+        const currentTokenCount = (tokenType === 'past_core') ? pastCoreTotal : futureCoreTotal;
+
+        const optionButton = document.createElement('button');
+        optionButton.classList.add('fusion-token-option');
+        optionButton.innerHTML = `
+            <img src="${IMAGE_BASE_PATH}${tokenImageBaseNames[tokenType]}" alt="${tokenDisplay}">
+            <span class="count-in-modal">(${currentTokenCount})</span>
+        `;
+        optionButton.dataset.tokenType = tokenType;
+        optionButton.dataset.currentCount = currentTokenCount;
+
+        optionButton.addEventListener('click', () => {
+            toggleTokenSelection(tokenType);
+        });
+        container.appendChild(optionButton);
+        return optionButton;
+    }
+
+    // カード選択肢ボタンを作成するヘルパー関数
+    function createCardOptionButton(cardId, container) {
+        const cardData = allCardData[cardId];
+        const currentPlayCount = getCardPlayCount(cardId);
+
+        const optionButton = document.createElement('button');
+        optionButton.classList.add('fusion-card-option');
+        optionButton.innerHTML = `
+            <img src="${IMAGE_BASE_PATH}${cardData.imgSrc}" alt="${cardData.name}">
+            <span class="count-in-modal">(${currentPlayCount})</span>
+        `;
+        optionButton.dataset.cardId = cardId;
+        optionButton.dataset.currentCount = currentPlayCount;
+
+        optionButton.addEventListener('click', () => {
+            toggleCardSelection(cardId);
+        });
+        container.appendChild(optionButton);
+        return optionButton;
+    }
+
+    // トークン選択の切り替えロジック
+    function toggleTokenSelection(tokenType) {
+        const currentCount = (tokenType === 'past_core') ? pastCoreTotal : futureCoreTotal;
+        const selectedCount = (tokenType === 'past_core') ? selectedSourceTokens.past_core : selectedSourceTokens.future_core;
+
+        if (selectedCount >= currentCount) {
+            if (selectedCount > 0) {
+                 if (tokenType === 'past_core') selectedSourceTokens.past_core--;
+                 else selectedSourceTokens.future_core--;
+            } else {
+                return;
+            }
+        } else {
+            if (tokenType === 'past_core') selectedSourceTokens.past_core++;
+            else selectedSourceTokens.future_core++;
+        }
+        updateModalSelectionStatus();
+    }
+
+    // カード選択の切り替えロジック
+    function toggleCardSelection(cardId) {
+        const currentCount = getCardPlayCount(cardId);
+        const selectedCount = selectedSourceCards[cardId] || 0;
+
+        if (selectedCount >= currentCount) {
+            if (selectedCount > 0) {
+                selectedSourceCards[cardId]--;
+            } else {
+                return;
+            }
+        } else {
+            selectedSourceCards[cardId] = (selectedSourceCards[cardId] || 0) + 1;
+        }
+        updateModalSelectionStatus();
+    }
+
+    // モーダル内の選択状況を更新し、確定ボタンの有効/無効を切り替える
+    function updateModalSelectionStatus() {
+        const targetCardData = currentTargetCardData;
+        let meetsAllRequirements = true;
+
+        // 1. 必須トークンコストのチェック
+        let remainingPastCoreCost = targetCardData.pastCoreCost;
+        let remainingFutureCoreCost = targetCardData.futureCoreCost;
+        
+        // ユーザーが選択した必須トークンはselectedSourceTokensには含まれないため、ここでチェック
+        if (pastCoreTotal < remainingPastCoreCost || futureCoreTotal < remainingFutureCoreCost) {
+             meetsAllRequirements = false;
+        }
+
+        // 2. 任意のトークンコストのチェック
+        let requiredAnyCount = targetCardData.anyCoreCost;
+        let currentAnySelected = selectedSourceTokens.past_core + selectedSourceTokens.future_core;
+
+        if (currentAnySelected < requiredAnyCount) {
+            meetsAllRequirements = false;
+        }
+
+        // 3. 必須前段階カードコストのチェック
+        let prevCardRequirementsMet = true;
+        
+        if (targetCardData.id === "card18") { // イクシードΩは各デストロイが1枚ずつ必須
+            if (!( (selectedSourceCards["card15"] || 0) >= 1 && 
+                   (selectedSourceCards["card16"] || 0) >= 1 && 
+                   (selectedSourceCards["card17"] || 0) >= 1 )) {
+                prevCardRequirementsMet = false;
+            }
+        } else if (targetCardData.id === "card17") { // ★デストロイアーティファクトγ の場合
+            let neededCount = targetCardData.prevCardCost; // 2
+            let actualSelectedCount = 0;
+            for (const cardId in selectedSourceCards) {
+                if (targetCardData.prevCardIds.includes(cardId)) { // card13, card14 が対象
+                    actualSelectedCount += selectedSourceCards[cardId];
+                }
+            }
+            if (actualSelectedCount < neededCount) {
+                prevCardRequirementsMet = false;
+            }
+        } 
+        else if (["card15", "card16"].includes(targetCardData.id)) { // デストロイα, β の場合
+            let neededCount = targetCardData.prevCardCost; // 1
+            let actualSelectedCount = 0;
+             for (const cardId in selectedSourceCards) { // 選択されたカードがprevCardIdsに含まれるか
+                if (targetCardData.prevCardIds.includes(cardId)) {
+                    actualSelectedCount += selectedSourceCards[cardId];
+                }
+            }
+            if (actualSelectedCount < neededCount) {
+                prevCardRequirementsMet = false;
+            }
+        }
+        if (!prevCardRequirementsMet) {
+            meetsAllRequirements = false;
+        }
+
+        confirmFusionSelectionButton.disabled = !meetsAllRequirements;
+
+        // 各ボタンのグレーアウト/選択状態更新
+        fusionCardOptionsContainer.querySelectorAll('.fusion-card-option').forEach(button => {
+            const cardId = button.dataset.cardId;
+            const currentCount = getCardPlayCount(cardId);
+            const selectedCount = selectedSourceCards[cardId] || 0;
+
+            if (selectedCount > 0) {
+                button.classList.add('selected');
+            } else {
+                button.classList.remove('selected');
+            }
+
+            // 選択可能な上限を超えている、または現在のプレイ枚数が0で選択されていない
+            if (currentCount <= selectedCount && selectedCount > 0) { // すでに選択されている枚数がプレイ枚数と同等以上
+                // 何もしない（selected状態が維持される）
+            } else if (currentCount === 0 && selectedCount === 0) { // プレイ枚数が0で、まだ選択されていない
+                button.classList.add('disabled');
+            } else if (currentCount > selectedCount) { // まだ選択可能
+                button.classList.remove('disabled');
+            }
+        });
+
+        fusionTokenOptionsContainer.querySelectorAll('.fusion-token-option').forEach(button => {
+            const tokenType = button.dataset.tokenType;
+            const currentTokenCount = (tokenType === 'past_core') ? pastCoreTotal : futureCoreTotal;
+            const selectedCount = (tokenType === 'past_core') ? selectedSourceTokens.past_core : selectedSourceTokens.future_core;
+
+            if (selectedCount > 0) {
+                button.classList.add('selected');
+            } else {
+                button.classList.remove('selected');
+            }
+
+            if (currentTokenCount <= selectedCount && selectedCount > 0) { // 現在の総数を超えて選択できない
+                // 何もしない
+            } else if (currentTokenCount === 0 && selectedCount === 0) { // トークンが0枚でまだ選択されていない
+                button.classList.add('disabled');
+            }
+            else if (currentTokenCount > selectedCount) { // まだ選択可能
+                button.classList.remove('disabled');
+            }
+        });
+    }
+
+    // 融合実行関数 (モーダルで選択された後)
+    function executeFusionAction() {
+        const targetCardData = currentTargetCardData;
+
+        // 必須トークンコストの消費
+        pastCoreTotal -= targetCardData.pastCoreCost;
+        futureCoreTotal -= targetCardData.futureCoreCost;
+
+        // 任意のトークン消費分を実際に減らす
+        pastCoreTotal -= selectedSourceTokens.past_core;
+        futureCoreTotal -= selectedSourceTokens.future_core;
+        
+        // 前段階カードのプレイカウントを減らす
+        // selectedSourceCards に基づいて減算 (融合元としてユーザーが選択したカード)
+        for (const cardId in selectedSourceCards) {
+            const countToConsume = selectedSourceCards[cardId];
+            if (countToConsume > 0) {
+                cardCounts[cardId] = (cardCounts[cardId] - countToConsume + 4) % 4;
+                updateCardCountDisplay(cardId);
+            }
+        }
+        
+        // イクシードΩの場合の特別な前段階カード消費（デストロイ3種）
+        if (targetCardData.id === "card18") {
+            // イクシードΩはα,β,γ各1枚消費なので、選択されたものが何であれ、これら3枚を消費する
+            // (checkFusionConditionsForSource で既にチェック済み)
+            // selectedSourceCards に"card15", "card16", "card17"のいずれかが選択されていればOK
+            // なので、実際にはここで3枚とも消費する
+            // ★ここはselectedSourceCardsで処理済みなので不要
+            /*
+            cardCounts["card15"] = (cardCounts["card15"] - 1 + 4) % 4;
+            cardCounts["card16"] = (cardCounts["card16"] - 1 + 4) % 4;
+            cardCounts["card17"] = (cardCounts["card17"] - 1 + 4) % 4;
+            updateCardCountDisplay("card15");
+            updateCardCountDisplay("card16");
+            updateCardCountDisplay("card17");
+            */
+        } 
+        // デストロイアーティファクトα, β, γ の場合
+        // ★デストロイγはselectedSourceCardsで処理済みなので、ここも不要
+        /*
+        else if (["card15", "card16", "card17"].includes(targetCardData.id)) { 
+            cardCounts[selectedSourceCardId] = (cardCounts[selectedSourceCardId] - 1 + 4) % 4;
+            updateCardCountDisplay(selectedSourceCardId);
+        }
+        */
+
+        // トークン総量がマイナスにならないように最小値を0に設定
+        pastCoreTotal = Math.max(0, pastCoreTotal);
+        futureCoreTotal = Math.max(0, futureCoreTotal);
+
+        // 融合されたカード（targetCardId）のプレイカウントを増やす
+        cardCounts[targetCardData.id] = (cardCounts[targetCardData.id] + 1) % 4;
+
+        // UIを更新
+        updateCardCountDisplay(targetCardData.id);
+        updateTotalTokenDisplay();
+        hideFusionModal();
+    }
+
+
+    // カードがクリックされたときの処理 (トークン生成系カード用)
     function handleCardClick(clickedButton) {
         const cardId = clickedButton.id;
         const oldCardCount = cardCounts[cardId];
-        const newCardCount = (oldCardCount + 1) % 4; // 0 -> 1 -> 2 -> 3 -> 0 のループ
+        const newCardCount = (oldCardCount + 1) % 4;
 
-        // クリックしたカードが持つトークン消費/生成情報
         const requiredPastCore = parseInt(clickedButton.dataset.pastCoreCost || '0', 10);
         const requiredFutureCore = parseInt(clickedButton.dataset.futureCoreCost || '0', 10);
         const requiredAnyCore = parseInt(clickedButton.dataset.anyCoreCost || '0', 10);
         const gainPastCore = parseInt(clickedButton.dataset.pastCoreGain || '0', 10);
         const gainFutureCore = parseInt(clickedButton.dataset.futureCoreGain || '0', 10);
 
-        // トークン総量の仮計算
         let nextPastCoreTotal = pastCoreTotal;
         let nextFutureCoreTotal = futureCoreTotal;
 
-        // --- 4枚目クリック時のリセット処理 ---
-        if (oldCardCount === 3 && newCardCount === 0) { // 3から0にリセットされる瞬間
-            // このカードがこれまでに生成したトークン（oldCardCount分）を差し戻す
-            nextPastCoreTotal -= (gainPastCore * oldCardCount); // ★修正
-            nextFutureCoreTotal -= (gainFutureCore * oldCardCount); // ★修正
-
-            // このカードがこれまでに消費したトークン（oldCardCount分）を戻す
-            // 固定コストを戻す
-            nextPastCoreTotal += (requiredPastCore * oldCardCount); // ★修正
-            nextFutureCoreTotal += (requiredFutureCore * oldCardCount); // ★修正
+        if (oldCardCount === 3 && newCardCount === 0) {
+            nextPastCoreTotal -= (gainPastCore * oldCardCount);
+            nextFutureCoreTotal -= (gainFutureCore * oldCardCount);
+            nextPastCoreTotal += (requiredPastCore * oldCardCount);
+            nextFutureCoreTotal += (requiredFutureCore * oldCardCount);
             
-            // 任意のトークンコストを戻す（これは複雑なため、シンプルに総量から戻す）
-            // 注意: 任意のトークンの戻し方は、消費された際の優先順位を完全に逆にする必要があるため、厳密には複雑
-            // ここでは簡易的に、現在の総量から任意のトークンの総コスト分を戻そうと試みますが、
-            // 元々消費されたトークンの種類がわからないため、厳密な復元は困難です。
-            // ユーザーが「任意」と指定したトークンを戻す最適な方法は、ユーザーがどちらを消費したかを記録するか、
-            // あるいは、最もバランスの取れた方法（例：少ない方から戻す）を仮定することになります。
-            // 現状の「多い方から消費」の逆は「少ない方から戻す」だが、これは実装が複雑になる。
-            // シンプルに、仮に消費されたパスト・コアとフューチャー・コアの合計から戻すと考える。
-            // ここは一旦、単純に任意のコスト分をパスト・コアから優先的に戻すとします（要調整）
-            let tempAnyCoreToRestore = requiredAnyCore * oldCardCount; // ★修正: oldCardCount分
+            let tempAnyCoreToRestore = requiredAnyCore * oldCardCount;
              while(tempAnyCoreToRestore > 0) {
-                if (nextPastCoreTotal < pastCoreTotal && nextPastCoreTotal <= nextFutureCoreTotal) { // 消費で減っているパストコアを優先
-                     nextPastCoreTotal++;
-                } else if (nextFutureCoreTotal < futureCoreTotal && nextFutureCoreTotal < nextPastCoreTotal) { // 消費で減っているフューチャーコアを優先
+                if (nextPastCoreTotal < pastCoreTotal && nextPastCoreTotal <= nextFutureCoreTotal) {
+                    nextPastCoreTotal++;
+                } else if (nextFutureCoreTotal < futureCoreTotal && nextFutureCoreTotal < nextPastCoreTotal) {
                     nextFutureCoreTotal++;
-                } else { // どちらも減っていない、または消費コストがない場合
+                } else {
                     break;
                 }
                 tempAnyCoreToRestore--;
             }
+            restorePreviousCardCounts(clickedButton, oldCardCount);
             
-            // 複合カード（デストロイ系、イクシード）が消費した前段階のカードのカウントも戻す
-            // isResetClickがtrueの場合、restorePreviousCardCountsを呼び出す
-            restorePreviousCardCounts(clickedButton, oldCardCount); // ★oldCardCountを渡す
-            
-        } else { // 通常のクリック（1, 2, 3枚目のプレイ）
-            // トークン消費（減算）のシミュレーション
+        } else {
             let tempPastCoreTotal = nextPastCoreTotal;
-            let tempFutureCoreTotal = nextFutureCoreTotal; // ★修正
+            let tempFutureCoreTotal = nextFutureCoreTotal;
 
-            // 固定コストの減算
             tempPastCoreTotal -= requiredPastCore;
             tempFutureCoreTotal -= requiredFutureCore;
 
-            // 任意のトークンコストの減算
             let tempAnyCore = requiredAnyCore;
             while (tempAnyCore > 0) {
                 if (tempPastCoreTotal > 0 && tempPastCoreTotal >= tempFutureCoreTotal) {
@@ -109,43 +428,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (tempFutureCoreTotal > 0) {
                     tempFutureCoreTotal--;
                 } else {
-                    break; // 消費するトークンが足りない
+                    alert(`「${clickedButton.dataset.cardName}」をプレイするには、トークンが足りません。\n必要なトークン: パスト・コア ${requiredPastCore}, フューチャー・コア ${requiredFutureCore}, 任意のトークン ${requiredAnyCore}\n現在のトークン: パスト・コア ${pastCoreTotal}, フューチャー・コア ${futureCoreTotal}`);
+                    return;
                 }
                 tempAnyCore--;
             }
 
-            // コストが足りているか最終チェック
             if (tempPastCoreTotal < 0 || tempFutureCoreTotal < 0 || tempAnyCore > 0) {
                 alert(`「${clickedButton.dataset.cardName}」をプレイするには、トークンが足りません。\n必要なトークン: パスト・コア ${requiredPastCore}, フューチャー・コア ${requiredFutureCore}, 任意のトークン ${requiredAnyCore}\n現在のトークン: パスト・コア ${pastCoreTotal}, フューチャー・コア ${futureCoreTotal}`);
-                return; // コストが足りなければ処理を中断
+                return;
             }
 
-            // 特定のカードプレイ枚数コストのチェック（デストロイ系、イクシード用）
             const prevCardCostMet = checkPreviousCardCosts(clickedButton);
             if (!prevCardCostMet) {
                 if (clickedButton.dataset.prevCardCost || clickedButton.dataset.prevCardCost2 || clickedButton.dataset.prevCardCost3) { 
                     alert(`「${clickedButton.dataset.cardName}」をプレイするには、特定のカードが足りません。`);
-                    return; // コストが足りなければ処理を中断
+                    return;
                 }
             }
             
-            // --- 実際のトークン総量の適用（消費と生成） ---
             nextPastCoreTotal = tempPastCoreTotal;
             nextFutureCoreTotal = tempFutureCoreTotal;
-
-            // トークン生成の適用
             nextPastCoreTotal += gainPastCore;
-            nextFutureCoreTotal += gainFutureCore; // ★修正
+            nextFutureCoreTotal += gainFutureCore;
         }
 
-        // トークン総量を更新
         pastCoreTotal = Math.max(0, nextPastCoreTotal);
         futureCoreTotal = Math.max(0, nextFutureCoreTotal);
-
-        // 各カードのプレイ枚数を更新
         cardCounts[cardId] = newCardCount;
-
-        // プレイ枚数とトークン総量の表示を更新
         updateCardCountDisplay(cardId);
         updateTotalTokenDisplay();
     }
@@ -166,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pastCoreDisplay.innerHTML = '';
         for (let i = 0; i < pastCoreTotal; i++) {
             const img = document.createElement('img');
-            img.src = tokenImageBasePaths.past_core; 
+            img.src = IMAGE_BASE_PATH + tokenImageBaseNames.past_core;
             img.alt = `パスト・コア`;
             pastCoreDisplay.appendChild(img);
         }
@@ -174,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         futureCoreDisplay.innerHTML = '';
         for (let i = 0; i < futureCoreTotal; i++) {
             const img = document.createElement('img');
-            img.src = tokenImageBasePaths.future_core; 
+            img.src = IMAGE_BASE_PATH + tokenImageBaseNames.future_core;
             img.alt = `フューチャー・コア`;
             futureCoreDisplay.appendChild(img);
         }
@@ -185,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return cardCounts[cardId] || 0;
     }
 
-    // 前段階のカードプレイコストをチェックする関数 (2枚目以降も消費)
+    // 前段階のカードプレイコストをチェックする関数 (プレイ時用)
     function checkPreviousCardCosts(clickedButton) {
         // イクシードアーティファクトΩ の特別なチェック (card18)
         if (clickedButton.id === "card18") { 
@@ -194,7 +504,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const destroyGammaCount = getCardPlayCount("card17");
 
             if (destroyAlphaCount >= 1 && destroyBetaCount >= 1 && destroyGammaCount >= 1) {
-                // 条件を満たしているので、対応するカードのプレイ数を1減らす (消費)
                 cardCounts["card15"] = (cardCounts["card15"] - 1 + 4) % 4;
                 cardCounts["card16"] = (cardCounts["card16"] - 1 + 4) % 4;
                 cardCounts["card17"] = (cardCounts["card17"] - 1 + 4) % 4;
@@ -228,8 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (eligibleConsumedCardIds.length >= prevCardCost) {
-            // 条件を満たしているので、対応するカードのプレイ数を1減らす (消費)
-            for (let i = 0; i < prevCardCost; i++) { // ★修正済
+            for (let i = 0; i < prevCardCost; i++) {
                 const consumedId = eligibleConsumedCardIds[i];
                 cardCounts[consumedId] = (cardCounts[consumedId] - 1 + 4) % 4;
                 updateCardCountDisplay(consumedId);
@@ -241,13 +549,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 複合カードが消費した前段階のカードのカウントを戻す関数（リセット時用）
-    // oldCardCountを引数に追加
-    function restorePreviousCardCounts(clickedButton, oldCardCount) { // ★oldCardCountを引数に追加
-        // イクシードアーティファクトΩ の特別なチェック (card18)
+    function restorePreviousCardCounts(clickedButton, oldCardCount) {
         if (clickedButton.id === "card18") {
-            // デストロイ系カードのカウントを oldCardCount分増やす
-            // ここでoldCardCountは3なので、3枚分戻す
-            for (let i = 0; i < oldCardCount; i++) { // ★修正: oldCardCount分ループ
+            for (let i = 0; i < oldCardCount; i++) {
                 cardCounts["card15"] = (cardCounts["card15"] + 1) % 4;
                 cardCounts["card16"] = (cardCounts["card16"] + 1) % 4;
                 cardCounts["card17"] = (cardCounts["card17"] + 1) % 4;
@@ -258,7 +562,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // デストロイアーティファクトα, β, γ のチェック
         const prevCardCost = parseInt(clickedButton.dataset.prevCardCost || '0', 10);
         const prevCardIds = clickedButton.dataset.prevCardIds ? clickedButton.dataset.prevCardIds.split(',') : [];
 
@@ -266,9 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // このカードがプレイされたことで消費された前段階カードを見つけて戻す
-        // oldCardCount分（つまり3回分）の消費を戻す
-        for (let j = 0; j < oldCardCount; j++) { // ★修正: oldCardCount分ループ
+        for (let j = 0; j < oldCardCount; j++) {
             for (let i = 0; i < prevCardCost; i++) { 
                 const consumedId = prevCardIds[i % prevCardIds.length]; 
                 if (consumedId) {
@@ -284,13 +585,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetAllCounts() {
         cardButtons.forEach(button => {
             const cardId = button.id;
-            cardCounts[cardId] = 0; // 各カードのプレイ枚数をリセット
-            updateCardCountDisplay(cardId); // 表示もリセット
+            cardCounts[cardId] = 0;
+            updateCardCountDisplay(cardId);
         });
 
-        pastCoreTotal = 0; // トークン総量もリセット
-        futureCoreTotal = 0; // トークン総量もリセット
-        updateTotalTokenDisplay(); // トークン総量の表示を更新
+        pastCoreTotal = 0;
+        futureCoreTotal = 0;
+        updateTotalTokenDisplay();
     }
 
     // アプリを初期化する

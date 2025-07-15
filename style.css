@@ -288,3 +288,182 @@ h2 {
         max-width: 55px; /* さらに画像を小さくする */
     }
 }
+
+/* モーダルの基本スタイル */
+.modal {
+    display: none; /* 初期状態では非表示 */
+    position: fixed; /* 画面に固定 */
+    z-index: 1000; /* 他の要素より手前に表示 */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* コンテンツがはみ出したらスクロール可能に */
+    background-color: rgba(0,0,0,0.4); /* 半透明の背景 */
+    justify-content: center;
+    align-items: center;
+}
+
+/* モーダルのコンテンツボックス */
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 800px; /* 少し広げて選択肢が並びやすくする */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+    text-align: center;
+    display: flex; /* 子要素をFlexboxで配置 */
+    flex-direction: column; /* 縦に並べる */
+    align-items: center; /* 中央揃え */
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 15px; /* 下部マージン調整 */
+    color: #34495e;
+}
+
+#fusion-instructions {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    text-align: left; /* 説明文は左寄せ */
+    width: 100%; /* 幅いっぱい */
+    padding: 0 10px; /* 左右に少しパディング */
+}
+
+/* 融合元カードの選択肢コンテナ（既存） */
+.fusion-card-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px dashed #ccc; /* 区切り線 */
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 融合元トークンの選択肢コンテナ（新規） */
+.fusion-token-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px dashed #ccc; /* 区切り線 */
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 融合元カード/トークンボタンのスタイル */
+.fusion-card-option, .fusion-token-option { /* ★.fusion-token-option を追加 */
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #eee;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.2s ease;
+    width: 80px; /* カードアイコンと合わせる */
+    height: auto;
+    box-sizing: border-box;
+    position: relative; /* カウントバッジ用 */
+}
+
+.fusion-card-option:hover:not(.disabled), .fusion-token-option:hover:not(.disabled) {
+    background-color: #ddd;
+    transform: translateY(-2px);
+}
+
+.fusion-card-option img, .fusion-token-option img {
+    width: 110%; /* ★親要素の幅いっぱいに広げる */
+    max-width: 150px; /* ★モーダル内の画像の最大サイズを調整 */
+    height: auto;
+    border-radius: 3px;
+}
+
+.fusion-card-option p, .fusion-token-option p {
+    display: none; /* ★カード名を非表示にする */
+    /* font-size, margin, color, word-break などは不要になります */
+}
+
+/* 選択されたカード/トークンのスタイル */
+.fusion-card-option.selected, .fusion-token-option.selected { /* ★.fusion-token-option を追加 */
+    border: 2px solid #007bff; /* 青色の枠 */
+    background-color: #e6f7ff; /* 薄い青色の背景 */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* グレーアウトスタイル（変更なし） */
+.fusion-card-option.disabled, .fusion-token-option.disabled { /* ★.fusion-token-option を追加 */
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: #e0e0e0;
+    background-color: #f5f5f5;
+}
+
+/* モーダルを閉じるボタン（既存） */
+.modal-close-button {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 10px;
+}
+
+.modal-close-button:hover {
+    background-color: #5a6268;
+}
+
+/* 融合確定ボタン（新規） */
+.modal-confirm-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 10px;
+    margin-right: 10px; /* キャンセルボタンとの間隔 */
+}
+
+.modal-confirm-button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.modal-confirm-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 選択肢内の現在の枚数表示（バッジ） */
+.count-in-modal {
+    position: absolute;
+    top: 0px; /* 上部に配置 */
+    right: 0px; /* 右側に配置 */
+    background-color: #ffc107; /* 黄色の背景 */
+    color: #333;
+    font-size: 0.7em; /* 小さめのフォント */
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 50%; /* 丸い表示 */
+    min-width: 15px; /* 1桁でも形を保つ */
+    text-align: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}

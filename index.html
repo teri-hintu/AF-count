@@ -154,7 +154,7 @@
                 </div>
 
                 <div class="total-token-display">
-                    <h2>相手の手札にあるトークン</h2>
+                    <h2>手札の融合元トークン</h2>
                     <div class="token-images">
                         <div class="token-type-display">
                             <h3>パスト・コア</h3>
@@ -174,6 +174,20 @@
         <div class="controls">
             <button id="reset-button">すべてリセット</button> </div>
     </div>
+
+<div id="fusion-modal" class="modal">
+    <div class="modal-content">
+        <h3 id="fusion-modal-title">融合元のカードを選択</h3>
+        <div id="fusion-instructions"></div> <div id="fusion-card-options" class="fusion-card-options">
+            </div>
+        <div id="fusion-token-options" class="fusion-token-options">
+            </div>
+        <div class="fusion-action-buttons">
+            <button id="confirm-fusion-selection" class="modal-confirm-button" disabled>融合確定</button>
+            <button id="close-fusion-modal" class="modal-close-button">キャンセル</button>
+        </div>
+    </div>
+</div>
 
     <script src="script.js"></script>
 </body>
